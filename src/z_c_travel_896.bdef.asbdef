@@ -1,0 +1,23 @@
+projection;
+strict ( 2 );
+use draft;
+
+define behavior for z_c_travel_896 //alias <alias_name>
+{
+  use create;
+  use update;
+  use delete;
+
+  use action acceptTravel;
+  use action rejectTravel;
+  use action DeductDiscount;
+  use action validateCustomerID;
+  use action validateAgencyID;
+  use action validateDates;
+
+  use action Resume;
+  use action Edit;
+  use action Activate;
+  use action Discard;
+  use action Prepare;
+}
