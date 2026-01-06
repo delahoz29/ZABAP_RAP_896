@@ -21,8 +21,8 @@ CLASS lhc_Travel DEFINITION INHERITING FROM cl_abap_behavior_handler.
     METHODS DeductDiscount FOR MODIFY
       IMPORTING keys FOR ACTION Travel~DeductDiscount RESULT result.
 
-    METHODS reCaclTtoalPrice FOR MODIFY
-      IMPORTING keys FOR ACTION Travel~reCaclTtoalPrice.
+    METHODS reCaclTotalPrice FOR MODIFY
+      IMPORTING keys FOR ACTION Travel~reCaclTotalPrice.
 
     METHODS rejectTravel FOR MODIFY
       IMPORTING keys FOR ACTION Travel~rejectTravel RESULT result.
@@ -114,11 +114,11 @@ CLASS lhc_Travel IMPLEMENTATION.
       ELSE.
         update_granted = abap_false.
         delete_granted = abap_false.
-       APPEND VALUE #( %tky        = travel-%tky
-                       %msg        = NEW /dmo/cm_flight_messages( textid    = /dmo/cm_flight_messages=>not_authorized_for_agencyid
-                                                                  agency_id = travel-AgencyID
-                                                                  severity  =  if_abap_behv_message=>severity-error )
-                       %element-AgencyID =  if_abap_behv=>mk-on ) TO reported-travel.
+        APPEND VALUE #( %tky        = travel-%tky
+                        %msg        = NEW /dmo/cm_flight_messages( textid    = /dmo/cm_flight_messages=>not_authorized_for_agencyid
+                                                                   agency_id = travel-AgencyID
+                                                                   severity  =  if_abap_behv_message=>severity-error )
+                        %element-AgencyID =  if_abap_behv=>mk-on ) TO reported-travel.
       ENDIF.
 
       APPEND VALUE #( LET upd_auth = COND #( WHEN update_granted EQ abap_true
@@ -267,7 +267,40 @@ CLASS lhc_Travel IMPLEMENTATION.
 
   ENDMETHOD.
 
-  METHOD reCaclTtoalPrice.
+  METHOD reCaclTotalPrice.
+
+    READ ENTITIES OF z_r_travel_896 IN LOCAL MODE
+           ENTITY Travel
+           FIELDS ( BookingFee CurrencyCode )
+           WITH CORRESPONDING #( keys )
+           RESULT DATA(travels).
+
+    DELETE travels WHERE CurrencyCode IS INITIAL.
+
+    LOOP AT travels ASSIGNING FIELD-SYMBOL(<travel>).
+
+      CLEAR <travel>-TotalPrice.
+
+      SELECT SINGLE FROM /dmo/booking
+        FIELDS flight_price
+        WHERE currency_code EQ @<travel>-CurrencyCode
+        INTO @DATA(lv_flight_price).
+
+      IF sy-subrc EQ 0.
+        <travel>-TotalPrice += lv_flight_price.
+      ENDIF.
+
+      <travel>-TotalPrice += <travel>-BookingFee.
+
+    ENDLOOP.
+
+    MODIFY ENTITIES OF z_r_travel_896 IN LOCAL MODE
+    ENTITY Travel
+    UPDATE FIELDS ( TotalPrice )
+    WITH CORRESPONDING #(  travels ).
+
+
+
   ENDMETHOD.
 
   METHOD rejectTravel.
@@ -292,12 +325,59 @@ CLASS lhc_Travel IMPLEMENTATION.
   ENDMETHOD.
 
   METHOD calculateTotalPrice.
+
+    MODIFY ENTITIES OF z_r_travel_896 IN LOCAL MODE
+        ENTITY Travel
+        EXECUTE reCaclTotalPrice
+       FROM CORRESPONDING #( keys ).
+
   ENDMETHOD.
 
   METHOD setStatusToOpen.
+
+    READ ENTITIES OF z_r_travel_896 IN LOCAL MODE
+           ENTITY Travel
+           FIELDS ( OverallStatus )
+           WITH CORRESPONDING #( keys )
+           RESULT DATA(travels).
+
+    DELETE travels WHERE OverallStatus IS NOT INITIAL.
+
+    CHECK travels IS NOT INITIAL.
+
+    MODIFY ENTITIES OF z_r_travel_896 IN LOCAL MODE
+   ENTITY Travel
+   UPDATE FIELDS ( OverallStatus )
+   WITH VALUE #(  FOR travel IN travels  INDEX INTO i
+                      ( %tky        = travel-%tky
+                      OverallStatus = travel_status-open ) ).
+
   ENDMETHOD.
 
   METHOD setTravelNumber.
+
+    READ ENTITIES OF z_r_travel_896 IN LOCAL MODE
+          ENTITY Travel
+          FIELDS ( TravelID )
+          WITH CORRESPONDING #( keys )
+          RESULT DATA(travels).
+
+    DELETE travels WHERE TravelID IS NOT INITIAL.
+
+    CHECK travels IS NOT INITIAL.
+
+    SELECT SINGLE FROM ztravel_896
+    FIELDS MAX( travel_id )
+    INTO @DATA(lv_max_travel_id).
+
+    MODIFY ENTITIES OF z_r_travel_896 IN LOCAL MODE
+    ENTITY Travel
+    UPDATE FIELDS ( TravelID )
+    WITH VALUE #(  FOR travel IN travels  INDEX INTO i
+                       ( %tky   = travel-%tky
+                       TravelID = lv_max_travel_id + 1 ) ).
+
+
   ENDMETHOD.
 
   METHOD validateAgency.

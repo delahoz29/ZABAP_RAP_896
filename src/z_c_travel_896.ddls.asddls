@@ -28,6 +28,10 @@ define root view entity z_c_travel_896
       BookingFee,
       @Semantics.amount.currencyCode: 'CurrencyCode'
       TotalPrice,
+      @EndUserText.label: 'VAT included'
+      @Semantics.amount.currencyCode: 'CurrencyCode'
+      @ObjectModel.virtualElementCalculatedBy: 'ABAP:ZCL_VIRT_ELEM_SADL_896'
+      virtual PriceWithVAT : /dmo/total_price,
       CurrencyCode,
       Description,
       @ObjectModel.text.element: [ 'OverallStatusText' ]

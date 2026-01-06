@@ -28,7 +28,7 @@ authorization master ( global, instance )
   action ( features : instance, authorization : update ) rejectTravel result [1] $self;
   action ( features : instance, authorization : update ) DeductDiscount parameter Z_AE_TRAVEL_DISCOUNT_896 result [1] $self;
 
-  internal action reCaclTtoalPrice;
+  internal action  reCaclTotalPrice;
 
   // Validaciones
   validation validateCustomer on save { create; field CustomerID; }

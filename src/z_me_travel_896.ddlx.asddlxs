@@ -81,6 +81,10 @@ annotate entity z_c_travel_896 with
                    importance: #HIGH }]
   @UI.identification: [{ position: 70 }]
   TotalPrice;
+  @UI.lineItem: [{ position: 71,
+                   importance: #HIGH }]
+  @UI.identification: [{ position: 71 }]
+  PriceWithVAT;
   @Consumption.valueHelpDefinition: [{ entity: { name: 'I_CurrencyStdVH',
                                                element: 'Currency' },
                                      useForValidation: true }]
