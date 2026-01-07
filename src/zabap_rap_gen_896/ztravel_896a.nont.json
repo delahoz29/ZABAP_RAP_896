@@ -1,0 +1,11 @@
+{
+  "formatVersion": "1",
+  "header": {
+    "description": "SAP Object Node Type ZTRAVEL_896A",
+    "originalLanguage": "en",
+    "abapLanguageVersion": "cloudDevelopment"
+  },
+  "name": "ZTRAVEL_896A",
+  "sapObjectType": "ZTRAVEL_896A",
+  "rootNode": true
+}
